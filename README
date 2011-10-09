@@ -1,5 +1,9 @@
 This is an Android Eclipse project I did for an REU over the 2011 Summer. It was a lot of fun, and I feel like I learned a lot from it, so here it is!
 
+I would like to give credit to: 
+https://github.com/glastonbridge/SuperCollider-Android/
+http://supercollider.sourceforge.net/sc140/ - I transcribed a few of these for use in the app
+
 If you have any questions, comments, suggestions or bones to pick, feel free to contact me: christian.dell1@gmail.com
 
 It requires Android 2.2+ and SuperCollider Android which can be found here: https://github.com/glastonbridge/SuperCollider-Android/wiki/_access
@@ -15,4 +19,5 @@ Change login information in Menu -> Preferences. Port 8000 is the default.
 You long press on the map to create a new location. Name it, select a synth, if you're logged into a server you can send it in. Click on an existing location to modify or remove it.
 Create area mode allows you to long press on the map to set vertices on a polygon. Menu -> Finalize pulls up a similar dialog to the normal creation mode.
 
-NOTE: My SuperCollider skills are very lacking. If you actually know what you're doing with SC, feel free to contribute some synths! I am keeping 
+NOTE: My SuperCollider skills are very lacking. If you actually know what you're doing with SC, feel free to contribute some synths!
+I have been following a pattern with parameters going into the synths: r, v, m are the names associated with the sliders in Preferences
