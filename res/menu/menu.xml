@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<group android:id="@+id/standardGroup">
+	    <item android:title="Preferences" android:id="@+id/preferences" />
+	    <item android:title="Create Area" android:id="@+id/createArea" />
+	</group>
+	<group android:id="@+id/createAreaGroup" >
+		<item android:title="Finalize" android:id="@+id/finalizeCreate" />
+    	<item android:title="Cancel" android:id="@+id/cancelCreate" />
+	</group>
+	<group android:id="@+id/offlineGroup">
+		<item android:title="Login" android:id="@+id/login" />
+		<item android:title="New User" android:id="@+id/newUser" />
+	</group>
+	<group android:id="@+id/onlineGroup">
+		<item android:title="Logout" android:id="@+id/logout" />
+		<item android:title="Edit User" android:id="@+id/editUser" />
+	    <item android:title="Download Locations" android:id="@+id/connect" />
+	</group>
+</menu>

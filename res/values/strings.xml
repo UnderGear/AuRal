@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, AuRal!</string>
+    <string name="app_name">AuRal</string>
+    <string name="Longitude"></string>
+    <string name="Latitude"></string>
+</resources>
