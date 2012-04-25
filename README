@@ -11,7 +11,7 @@ It requires Android 2.2+ and SuperCollider Android which can be found here: http
 Contact me if you are having any problems with SC. I had a lot of them at first, but it is really nice after everything is all set up.
 It is a source link to the SuperCollider project. Copy/Paste the ISuperCollider.java file from that project into the same location (in gen folder) in this project
 
-EDIT: The Ruby on Rails application's source code is here: https://github.com/UnderGear/AuRalSite
+I will upload the Ruby on Rails server that accompanies this project in the near future so you can see that, too.
 
 Usage:
 Change login information in Menu -> Preferences. Port 8000 is the default.
