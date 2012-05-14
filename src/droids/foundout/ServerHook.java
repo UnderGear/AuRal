@@ -39,6 +39,8 @@ import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortIn;
 
 public class ServerHook {
+	
+	static private ServerHook _instance;
 
 	private AuRal owner;
 	//for connection to server
@@ -61,12 +63,61 @@ public class ServerHook {
 		return userID;
 	}
 	
+	static synchronized public ServerHook getInstance() 
+	{
+	    if (_instance == null) 
+	      _instance = new ServerHook();
+	    return _instance;
+	 }
+	
+	public void setOwner(final AuRal owner) {
+		this.owner = owner;
+		//giving the address and port some values from preferences
+        try {
+			url = InetAddress.getByName(owner.preferences.getString("ip_number", "127.0.0.1")).toString();
+			port = Integer.parseInt(owner.preferences.getString("port_number", "80"));
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		try {
+			parser = spf.newSAXParser();
+			reader = parser.getXMLReader();
+			myXmlHandler = new XmlHandler();
+			reader.setContentHandler(myXmlHandler);
+		} catch (ParserConfigurationException e1) {
+			e1.printStackTrace();
+		} catch (SAXException e1) {
+			e1.printStackTrace();
+		}
+		try {
+			oscReceiver = new OSCPortIn(8000); //change me from default (8000?) if you need to
+		} catch (SocketException e) {
+			Log.e(AuRal.TAG, e.getMessage());
+		}
+		
+		listener = new OSCListener() {
+			public void acceptMessage(java.util.Date time, OSCMessage message) {
+				Object o[] = message.getArguments();
+				for (Place place : owner.auraManager.destinations.values()) {
+					if (place.name.equals(o[0].toString())) {
+						Log.e(AuRal.TAG, "got it");
+						owner.scManager.updateParams(place.index, o[1], o[2], o[3]);
+						break;
+					}
+				}
+			}
+		};
+		oscReceiver.addListener("/Server", listener); //more osc messages!
+		oscReceiver.startListening();
+		
+	}
+	
 	public ServerHook(AuRal g) {
 		owner = g;
 		//giving the address and port some values from preferences
         try {
 			url = InetAddress.getByName(owner.preferences.getString("ip_number", "127.0.0.1")).toString();
-			port = Integer.parseInt(owner.preferences.getString("port_number", "3000"));
+			port = Integer.parseInt(owner.preferences.getString("port_number", "80"));
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -102,6 +153,10 @@ public class ServerHook {
 		oscReceiver.startListening();
 	}
 	
+	public ServerHook() {
+		// TODO Auto-generated constructor stub
+	}
+
 	public void logIn() {
 		if (userID == 0) {
 			final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_login");

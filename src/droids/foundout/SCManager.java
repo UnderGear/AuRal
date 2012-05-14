@@ -9,6 +9,7 @@ import java.util.Collection;
 import net.sf.supercollider.android.OscMessage;
 import net.sf.supercollider.android.SCAudio;
 
+import android.util.Log;
 import android.widget.Toast;
 
 //This class handles all SuperCollider interactions.
@@ -90,6 +91,14 @@ public class SCManager {
     //generating a new SC synth here.
     public void startAudio(int n, String synth) {
     	sc.sendMessage(new OscMessage( new Object[] {"s_new", synth, 100+n, 0, 1}));
+    	
+    	if (synth.equals("test_nime_mel_drum")) {
+    		//TODO: spawn a thread to keep a model of this bad boy here.
+    		//.1 or .2 seconds to swap between the notes.
+    		//TODO: look at the stuff Yemin sent you to base this code off of.
+    		//TODO: asynctask?
+    		sc.sendMessage(new OscMessage( new Object[] {"n_set", 100+n, "ampSnare", 0, "ampBass", 0, "ampHihat", 1} ));
+    	}
     }
     
     //frees an individual audio completely

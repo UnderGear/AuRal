@@ -49,7 +49,9 @@ public class AuRal extends MapActivity {
     	scManager = SCManager.getInstance();
     	scManager.setOwner(this);
     	//scManager = new SCManager(this);
-    	serverHook = new ServerHook(this);
+    	serverHook = ServerHook.getInstance();
+    	serverHook.setOwner(this);
+    	//serverHook = new ServerHook(this);
     	cartographer = new Cartographer(this);
     }
     
