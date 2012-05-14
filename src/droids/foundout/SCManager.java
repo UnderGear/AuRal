@@ -13,6 +13,9 @@ import android.widget.Toast;
 
 //This class handles all SuperCollider interactions.
 public class SCManager {
+	
+	static private SCManager _instance;
+	
 	private AuRal owner;
 	//SuperCollider stuff
 	private static final String dllDirStr = "/data/data/net.sf.supercollider.android/lib";
@@ -38,6 +41,37 @@ public class SCManager {
     		sc.sendMessage(new OscMessage( new Object[] {"s_new", selectedSynth.replace(".scsyndef", ""), 100, 0, 0}));
     		
 	}
+	
+	private SCManager() {
+		
+	}
+	
+	public void setOwner(AuRal owner) {
+		this.owner = owner;
+		//adding in all of the user's synthDefs
+        deliverSynthDefs("");
+        //start up the SC audio
+    	new Thread() {
+    		public void run() {
+	    		sc = new SCAudio(dllDirStr);
+	            sc.start();
+    		}
+    	}.run();
+    	selectedSynth = owner.preferences.getString("listPref", "default");
+    	if (owner.preferences.getBoolean("play_personal_audio", false) == true)
+    		sc.sendMessage(new OscMessage( new Object[] {"s_new", selectedSynth.replace(".scsyndef", ""), 100, 0, 1}));
+    	else 
+    		sc.sendMessage(new OscMessage( new Object[] {"s_new", selectedSynth.replace(".scsyndef", ""), 100, 0, 0}));
+	}
+	
+	static synchronized public SCManager getInstance() 
+	{
+	    if (_instance == null) 
+	      _instance = new SCManager();
+	    return _instance;
+	 }
+	
+	
 	//called when the preference box for personal is changed: play or pause it
     public void startPersonal(Boolean b) {
     	if (b) {

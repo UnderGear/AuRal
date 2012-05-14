@@ -23,6 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".DirectInput" android.label="DirectInput"/>
     	<activity android:name=".Preferences" android:label="Preferences"/>
 		<activity android:name=".SuperColliderActivity" android:configChanges="keyboard|keyboardHidden|orientation" />
 		<service android:name=".ScService" >

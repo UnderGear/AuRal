@@ -46,7 +46,9 @@ public class AuRal extends MapActivity {
         
     	locationeer = new Locationeer(this);
     	auraManager = new AuraManager(this);
-    	scManager = new SCManager(this);
+    	scManager = SCManager.getInstance();
+    	scManager.setOwner(this);
+    	//scManager = new SCManager(this);
     	serverHook = new ServerHook(this);
     	cartographer = new Cartographer(this);
     }
@@ -144,6 +146,9 @@ public class AuRal extends MapActivity {
     
     //handles menu item selection
 	public boolean onOptionsItemSelected(MenuItem item) {
+		
+		//TODO: new menu option for direct input. this launches a new activity with a view filled with sliders, buttons, etc. should have access to serverhook.
+		
 		switch (item.getItemId()) {
 		case R.id.preferences:
 			Intent i = new Intent(AuRal.this, Preferences.class);
