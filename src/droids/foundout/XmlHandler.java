@@ -8,7 +8,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class XmlHandler extends DefaultHandler {
 	private boolean in_location = false;
-    private boolean in_id = false;
+    //private boolean in_id = false;
     private boolean in_latitude = false;
     private boolean in_longitude = false;
     private boolean in_name = false;
@@ -43,9 +43,9 @@ public class XmlHandler extends DefaultHandler {
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
         if (localName.equals("location")) {
             this.in_location = true;
-        }else if (localName.equals("id")) {
+        }/**else if (localName.equals("id")) {
             this.in_id = true;
-        }else if (localName.equals("latitude")) {
+        }*/else if (localName.equals("latitude")) {
         	lat = 0.0;
             this.in_latitude = true;
         }else if (localName.equals("longitude")) {
@@ -68,9 +68,9 @@ public class XmlHandler extends DefaultHandler {
             this.in_location = false;
             currentPlace = new PointPlace(lat, lon, -1, syn, name, true);
             places.add(currentPlace);
-        }else if (localName.equals("id")) {
+        }/**else if (localName.equals("id")) {
             this.in_id = false;
-        }else if (localName.equals("latitude")) {
+        }*/else if (localName.equals("latitude")) {
             this.in_latitude = false;
         }else if (localName.equals("longitude")) {
             this.in_longitude = false;

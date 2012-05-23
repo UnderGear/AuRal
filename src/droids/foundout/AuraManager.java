@@ -25,6 +25,8 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.OverlayItem;
 
+import droids.foundout.R.id;
+
 public class AuraManager {
 	private AuRal owner;
 	private int playCount = 0; //gives SC synths an index corresponding to the number of locations
@@ -63,6 +65,9 @@ public class AuraManager {
             	
             	int spinnerPosition = adapter.getPosition("default.scsyndef");
             	spinner.setSelection(spinnerPosition);
+            	
+            	CheckBox submit = (CheckBox) layout.findViewById(id.dialogSubmit);
+            	submit.setVisibility(0);
             	
             	CheckBox check = (CheckBox) layout.findViewById(R.id.dialogRemove);
             	check.setVisibility(4);

@@ -3,8 +3,7 @@
     <PreferenceCategory android:title="User Settings">
     	<EditTextPreference android:key="username" android:title="Username" />
     	<EditTextPreference android:key="password" android:title="Password" android:password="true"/>
-        <EditTextPreference android:key="ip_number" android:title="Server IP"/>
-        <EditTextPreference android:key="port_number" android:title="Port Number" android:inputType="phone"/>
+        <EditTextPreference android:key="ip_number" android:title="Hub Address"/>
         <CheckBoxPreference android:key="play_personal_audio" android:title="Play Personal Audio" android:selectable="true" android:defaultValue="true" android:enabled="true"/>
         <ListPreference
            android:title="Personal Audio"
@@ -12,12 +11,12 @@
            android:dependency="play_personal_audio"
            android:key="listPref"
            android:defaultValue="default" />
-       <droids.foundout.SeekBarPreference android:key="Pslider1" android:title="Param1" android:dependency="play_personal_audio" />
+       <!--<droids.foundout.SeekBarPreference android:key="Pslider1" android:title="Param1" android:dependency="play_personal_audio" />
        <droids.foundout.SeekBarPreference android:key="Pslider2" android:title="Param2" android:dependency="play_personal_audio" />
        <droids.foundout.SeekBarPreference android:key="Pslider3" android:title="Param3" android:dependency="play_personal_audio" />
        <CheckBoxPreference android:key="play_other_audio" android:title="Play Other Audio" android:selectable="true" android:defaultValue="true" android:enabled="true" />
        <droids.foundout.SeekBarPreference android:key="slider1" android:title="Param1" android:dependency="play_other_audio" />
        <droids.foundout.SeekBarPreference android:key="slider2" android:title="Param2" android:dependency="play_other_audio" />
-       <droids.foundout.SeekBarPreference android:key="slider3" android:title="Param3" android:dependency="play_other_audio" />
+       <droids.foundout.SeekBarPreference android:key="slider3" android:title="Param3" android:dependency="play_other_audio" />-->
     </PreferenceCategory>
 </PreferenceScreen>

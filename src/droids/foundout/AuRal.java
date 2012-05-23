@@ -39,6 +39,7 @@ public class AuRal extends MapActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
+    	
     	preferences = PreferenceManager.getDefaultSharedPreferences(this);
     	setContentView(R.layout.main);
     	tv1 = (TextView) findViewById(R.id.latView);
@@ -58,7 +59,7 @@ public class AuRal extends MapActivity {
     //makes things work again. used when changing preferences as well as coming back to the app
     public void onResume() {
     	super.onResume();
-		serverHook.updateIP(preferences.getString("ip_number", "127.0.0.1"), Integer.parseInt(preferences.getString("port_number", "3000"))); //set up IP based on preferences
+    	serverHook.updateIP(preferences.getString("ip_number", "aural.allisonic.com"));
 		serverHook.updateUser(preferences.getString("username", ""), preferences.getString("password", ""));
 		locationeer.startLocationUpdates(); //get the locationListener up and running again
 		String s = preferences.getString("listPref", "Micromoog");
@@ -73,9 +74,9 @@ public class AuRal extends MapActivity {
 		if (preferences.getBoolean("play_personal_audio", false) == true) {
 			scManager.sc.sendMessage(new OscMessage(new Object[] { "n_set", 100, "r", (float)(preferences.getInt("Pslider1", 0)/1000.0) }));
 		}
-		if (preferences.getBoolean("play_other_audio", false) == true) {
+		/**if (preferences.getBoolean("play_other_audio", false) == true) {
 			serverHook.changeServerParams();
-		}
+		}*/
 		auraManager.testLocation(locationeer.getCurrentLocation()); //determine which tracks (if any) to play and start them
     }
     
@@ -83,12 +84,6 @@ public class AuRal extends MapActivity {
     @Override
 	public void onPause() {
 		super.onPause();
-		locationeer.stopLocationUpdates();
-	}
-	
-	@Override
-	public void onStop() {
-		super.onStop();
 		locationeer.stopLocationUpdates();
 	}
 	
@@ -111,6 +106,7 @@ public class AuRal extends MapActivity {
 		scManager.sc.sendQuit();
 		scManager.sc.closeUDP();
 		serverHook.oscReceiver.close();
+		//serverHook.oscReceiver.stopListening();
 		locationeer.stopLocationUpdates();
 		serverHook.logOut();
 		super.finish();
@@ -148,8 +144,6 @@ public class AuRal extends MapActivity {
     
     //handles menu item selection
 	public boolean onOptionsItemSelected(MenuItem item) {
-		
-		//TODO: new menu option for direct input. this launches a new activity with a view filled with sliders, buttons, etc. should have access to serverhook.
 		
 		switch (item.getItemId()) {
 		case R.id.preferences:
@@ -194,6 +188,10 @@ public class AuRal extends MapActivity {
 			break;
 		case R.id.editUser:
 			serverHook.modifyUser();
+			break;
+		case R.id.instrument:
+			Intent instrumentIntent = new Intent(AuRal.this, DirectInput.class);
+			startActivity(instrumentIntent);
 			break;
 		}
 		return true;

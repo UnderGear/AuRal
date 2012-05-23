@@ -7,7 +7,7 @@ import com.google.android.maps.OverlayItem;
 
 public class PointPlace extends Place {
 	double lat, lon;
-	int range = 30;
+	int range = 60;
 	//TODO: we can save range on server and edit it now that it's inside this class
 	
 	public double getLat() {

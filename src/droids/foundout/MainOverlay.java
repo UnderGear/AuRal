@@ -97,7 +97,7 @@ public class MainOverlay extends ItemizedOverlay {
 				//overlay.setMarker(Drawable marker);
 				OverlayItem item = (OverlayItem)indexedOverlayItem.item;
 				PointPlace place = (PointPlace)owner.auraManager.destinations.get(indexedOverlayItem.index);
-				int radius = metersToRadius((float)30.0, mapView, place.getLat());
+				int radius = metersToRadius((float)60.0, mapView, place.getLat());
 				GeoPoint gP = item.getPoint();
 				Point p = new Point();
 				projection.toPixels(gP, p);

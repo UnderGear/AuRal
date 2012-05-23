@@ -43,9 +43,11 @@ public class ServerHook {
 	static private ServerHook _instance;
 
 	private AuRal owner;
+	
+	private String TAG = "ServerHook";
 	//for connection to server
 	private String url;
-    private int port;
+    //private int port;
     //tools for parsing XML from server
     SAXParserFactory spf = SAXParserFactory.newInstance();
     SAXParser parser;
@@ -58,6 +60,10 @@ public class ServerHook {
 	private int userID;
 	private String username;
 	private String password;
+	
+	public String getURL() {
+		return url;
+	}
 	
 	public int getID() {
 		return userID;
@@ -73,12 +79,13 @@ public class ServerHook {
 	public void setOwner(final AuRal owner) {
 		this.owner = owner;
 		//giving the address and port some values from preferences
-        try {
-			url = InetAddress.getByName(owner.preferences.getString("ip_number", "127.0.0.1")).toString();
-			port = Integer.parseInt(owner.preferences.getString("port_number", "80"));
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
+        //try {
+        	url = owner.preferences.getString("ip_number", "aural.allisonic.com");
+			//url = InetAddress.getByName(owner.preferences.getString("ip_number", "aural.allisonic.com")).toString();
+			//port = Integer.parseInt(owner.preferences.getString("port_number", "80"));
+		//} /**catch (UnknownHostException e) {
+			//e.printStackTrace();
+		//}*/
 		try {
 			parser = spf.newSAXParser();
 			reader = parser.getXMLReader();
@@ -98,9 +105,9 @@ public class ServerHook {
 		listener = new OSCListener() {
 			public void acceptMessage(java.util.Date time, OSCMessage message) {
 				Object o[] = message.getArguments();
+				if (owner.preferences.getBoolean("play_personal_audio", false)) owner.scManager.updateParams(0, o[1], o[2], o[3]);
 				for (Place place : owner.auraManager.destinations.values()) {
 					if (place.name.equals(o[0].toString())) {
-						Log.e(AuRal.TAG, "got it");
 						owner.scManager.updateParams(place.index, o[1], o[2], o[3]);
 						break;
 					}
@@ -117,7 +124,7 @@ public class ServerHook {
 		//giving the address and port some values from preferences
         try {
 			url = InetAddress.getByName(owner.preferences.getString("ip_number", "127.0.0.1")).toString();
-			port = Integer.parseInt(owner.preferences.getString("port_number", "80"));
+			//port = Integer.parseInt(owner.preferences.getString("port_number", "80"));
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -139,11 +146,12 @@ public class ServerHook {
 		
 		listener = new OSCListener() {
 			public void acceptMessage(java.util.Date time, OSCMessage message) {
+				Log.e(TAG, message.toString());
 				Object o[] = message.getArguments();
 				for (Place place : owner.auraManager.destinations.values()) {
 					if (place.name.equals(o[0].toString())) {
 						Log.e(AuRal.TAG, "got it");
-						owner.scManager.updateParams(place.index, o[1], o[2], o[3]);
+						owner.scManager.updateParams(place.index, o[1], o[2], o[3]); //TODO: change updateParams to take in a list of params instead of a set number
 						break;
 					}
 				}
@@ -153,13 +161,15 @@ public class ServerHook {
 		oscReceiver.startListening();
 	}
 	
-	public ServerHook() {
-		// TODO Auto-generated constructor stub
-	}
+	public ServerHook() { }
 
 	public void logIn() {
 		if (userID == 0) {
-			final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_login");
+			final HttpPut put = new HttpPut("http://"+url+"/users/device_login");
+			
+			//Log.e("SH", url);
+			//Log.e("SH", "http://"+url+"/users/device_login");
+			
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -177,7 +187,14 @@ public class ServerHook {
 		        String responseString = EntityUtils.toString(r_entity);
 		        if (responseString.equals(""))
 		        	userID = 0;
-		        else userID = Integer.parseInt(responseString);
+		        else {
+		        	try {
+		        		userID = Integer.parseInt(responseString);
+		        	}
+		        	catch (Exception e) {
+		        		Log.e("ServerHook", e.getMessage());
+		        	}
+		        }
 		        if (userID != 0)
 		        	Toast.makeText(owner, "Logged in as " + username, 3000).show();
 		        else Toast.makeText(owner, "Authentication Failed", 3000).show();
@@ -193,7 +210,7 @@ public class ServerHook {
 	public void modifyUser() {
 		//similar to sendMyLocation
 		if (userID != 0) {
-	    	final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_edit/"+userID);
+	    	final HttpPut put = new HttpPut("http://"+url+"/users/device_edit/"+userID);
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -210,7 +227,7 @@ public class ServerHook {
 	    		        put.setEntity(new UrlEncodedFormEntity(hash));
 	
 	    		        // Execute HTTP Put Request
-	    		        HttpResponse response = client.execute(put);
+	    		        /**HttpResponse response = */client.execute(put);
 	    		        //TODO: do something with response?
 					}catch (IOException e) {
 						e.printStackTrace();
@@ -222,7 +239,7 @@ public class ServerHook {
 	
 	public void createUser() {
 		if (userID == 0) {
-			final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_create/");
+			final HttpPut put = new HttpPut("http://"+url+"/users/device_create/");
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -249,7 +266,14 @@ public class ServerHook {
 	    		        	userID = 0;
 	    		        	Toast.makeText(owner, "Create User Failed", 3000).show();
 	    		        }
-	    		        else userID = Integer.parseInt(responseString);
+	    		        else {
+	    		        	try {
+	    		        		userID = Integer.parseInt(responseString);
+	    		        	}
+	    		        	catch (Exception e) {
+	    		        		Log.e("ServerHook", e.getMessage());
+	    		        	}
+	    		        }
 	    		        Toast.makeText(owner, "Create User Successful", 3000).show();
 	    		        Toast.makeText(owner, "Logged in as " + username, 3000).show();
 					}catch (IOException e) {
@@ -262,7 +286,7 @@ public class ServerHook {
 	
 	public void logOut() {
 		if (userID != 0) {
-			final HttpGet get = new HttpGet("http:/"+url+":"+port+"/users/device_logout/"+userID);
+			final HttpGet get = new HttpGet("http://"+url+"/users/device_logout/"+userID);
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -305,14 +329,9 @@ public class ServerHook {
     	}
     }*/
 	
-	//changed the connection IP, fix stuff up here.
-    public void updateIP(String s, int p) {
-    	port = p;
-    	try {
-			url = (InetAddress.getByName(s)).toString();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
+	//changed the connection hub location.
+    public void updateIP(String s) {
+		url = s;
     }
     
     public void updateUser(String name, String pass) {
@@ -322,7 +341,7 @@ public class ServerHook {
     
     //dealing with connection to server here
     public void getLocationsFromServer() {
-    	final HttpGet get = new HttpGet("http:/"+url+":"+port+"/locations.xml");
+    	final HttpGet get = new HttpGet("http://"+url+"/locations.xml");
     	HttpParams httpParameters = new BasicHttpParams();
     	int timeoutConnection = 7000;
     	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -343,7 +362,7 @@ public class ServerHook {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//TODO: work on this - must be faster and must handle areas as well
+		//TODO: work on this - must be faster and must handle polygon areas as well
 		boolean contained = false;
 		Collection<Place> places = owner.auraManager.destinations.values();
 		for (PointPlace p : myXmlHandler.getPlaces()) {
@@ -362,7 +381,7 @@ public class ServerHook {
     
     public void sendMyLocation() {
     	if (userID != 0) {
-	    	final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_update/"+userID);
+	    	final HttpPut put = new HttpPut("http://"+url+"/users/device_update/"+userID);
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -380,7 +399,7 @@ public class ServerHook {
 	    		        put.setEntity(new UrlEncodedFormEntity(hash));
 	
 	    		        // Execute HTTP Put Request
-	    		        HttpResponse response = client.execute(put);
+	    		        /**HttpResponse response = */client.execute(put);
 	    		        //TODO: do something with response? - let's get nearby locations from the server.
 					}catch (IOException e) {
 						e.printStackTrace();
@@ -392,7 +411,7 @@ public class ServerHook {
 
 	public void notifyServerLocationExit(final Place place) {
 		if (userID != 0) {
-			final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_exit_location/"+userID);
+			final HttpPut put = new HttpPut("http://"+url+"/users/device_exit_location/"+userID);
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -406,7 +425,7 @@ public class ServerHook {
 	    			    hash.add(new BasicNameValuePair("location_name", place.name));
 	    		        put.setEntity(new UrlEncodedFormEntity(hash));
 	    		        
-	    		        HttpResponse response = client.execute(put);
+	    		        /**HttpResponse response = */client.execute(put);
 	    		        //TODO: do something with response? - let's get nearby locations from the server.
 					}catch (IOException e) {
 						e.printStackTrace();
@@ -418,7 +437,7 @@ public class ServerHook {
 
 	public void notifyServerLocationEnter(final Place place) {
 		if (userID != 0) {
-			final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_enter_location/"+userID);
+			final HttpPut put = new HttpPut("http://"+url+"/users/device_enter_location/"+userID);
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -432,7 +451,7 @@ public class ServerHook {
 	    			    hash.add(new BasicNameValuePair("location_name", place.name));
 	    		        put.setEntity(new UrlEncodedFormEntity(hash));
 	    		        
-	    		        HttpResponse response = client.execute(put);
+	    		        /**HttpResponse response = */client.execute(put);
 	    		        //TODO: do something with response? - let's get nearby locations from the server.
 					}catch (IOException e) {
 						e.printStackTrace();
@@ -442,9 +461,9 @@ public class ServerHook {
 		}
 	}
 	
-	public void changeServerParams() {
+	public void changeServerParams(final int id, final String value) {
 		if (userID != 0) {
-			final HttpPut put = new HttpPut("http:/"+url+":"+port+"/users/device_update_params/"+userID);
+			final HttpPut put = new HttpPut("http://"+url+"/users/device_update_params/"+userID);
 	    	HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -455,12 +474,10 @@ public class ServerHook {
 	        	public void run() {
 	    			try {
 	    				List<NameValuePair> hash = new ArrayList<NameValuePair>(3);
-	    			    hash.add(new BasicNameValuePair("param_1", ""+(owner.preferences.getInt("slider1", 0)/1000.0)));
-	    		        hash.add(new BasicNameValuePair("param_2", ""+(owner.preferences.getInt("slider2", 0)/1000.0)));
-	    		        hash.add(new BasicNameValuePair("param_3", ""+(owner.preferences.getInt("slider3", 0)/1000.0)));
+	    			    hash.add(new BasicNameValuePair("param_" + id, ""+value));
 	    		        put.setEntity(new UrlEncodedFormEntity(hash));
 	
-	    		        HttpResponse response = client.execute(put);
+	    		        /**HttpResponse response = */client.execute(put);
 	    		        //TODO: do something with response? - let's get nearby locations from the server.
 					}catch (IOException e) {
 						e.printStackTrace();
@@ -472,7 +489,7 @@ public class ServerHook {
 
 	public void submitArea(final PointPlace place) {
 		if (userID != 0) {
-			final HttpPut put = new HttpPut("http:/"+url+":"+port+"/locations/device_create");
+			final HttpPut put = new HttpPut("http://"+url+"/locations/device_create");
 			HttpParams httpParameters = new BasicHttpParams();
 	    	int timeoutConnection = 7000;
 	    	HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);

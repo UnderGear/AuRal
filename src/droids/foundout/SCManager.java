@@ -92,13 +92,9 @@ public class SCManager {
     public void startAudio(int n, String synth) {
     	sc.sendMessage(new OscMessage( new Object[] {"s_new", synth, 100+n, 0, 1}));
     	
-    	if (synth.equals("test_nime_mel_drum")) {
-    		//TODO: spawn a thread to keep a model of this bad boy here.
-    		//.1 or .2 seconds to swap between the notes.
-    		//TODO: look at the stuff Yemin sent you to base this code off of.
-    		//TODO: asynctask?
-    		sc.sendMessage(new OscMessage( new Object[] {"n_set", 100+n, "ampSnare", 0, "ampBass", 0, "ampHihat", 1} ));
-    	}
+    	/**if (synth.equals("test_nime_mel_drum")) {
+    		sc.sendMessage(new OscMessage( new Object[] {"n_set", 100+n, "param_1", 0, "param_2", 0, "param_3", 0} ));
+    	}*/
     }
     
     //frees an individual audio completely
@@ -106,8 +102,11 @@ public class SCManager {
     	sc.sendMessage(new OscMessage( new Object[] {"n_free", 100+n}));
     }
     
-    public void updateParams(int index, Object o, Object o2, Object o3) {
-    	sc.sendMessage(new OscMessage( new Object[] {"n_set", 100+index, "r", o, "v", o2, "m", o3} ));
+    //TODO: we should be taking in an index and a list of objects to update all the params.
+    public void updateParams(int index, Object o, Object o2, Object o3) { 
+    	sc.sendMessage(new OscMessage( new Object[] {"n_set", 100+index, "param_1", o, "param_2", o2, "param_3", o3} ));
+    	Log.e("SCManager", "param_1: "+ o + ", param_2: " + o2 + ", param_3: " + o3);
+    	//sc.sendMessage(new OscMessage( new Object[] {"n_set", 100+index, "r", o, "v", o2, "m", o3} ));
     }
     
     //called if an audio synth should be replaced for a given destination (by index)

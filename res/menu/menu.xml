@@ -16,5 +16,6 @@
 		<item android:title="Logout" android:id="@+id/logout" />
 		<item android:title="Edit User" android:id="@+id/editUser" />
 	    <item android:title="Download Locations" android:id="@+id/connect" />
+	    <item android:title="Instrument" android:id="@+id/instrument" />
 	</group>
 </menu>
