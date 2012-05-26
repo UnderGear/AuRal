@@ -6,8 +6,18 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 
+/**
+ * User preferences.
+ * @author UnderGear
+ *
+ */
 public class Preferences extends PreferenceActivity {
-	/** Called when the activity is first created. */
+
+	/**
+	 * Create the preferences activity from XML
+	 * 
+	 * @param savedInstanceState
+	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);

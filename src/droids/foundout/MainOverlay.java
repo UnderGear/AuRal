@@ -32,6 +32,11 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
+/**
+ * This is the map overlay used on the Google Maps map view
+ * @author UnderGear
+ *
+ */
 @SuppressWarnings("unchecked")
 public class MainOverlay extends ItemizedOverlay {
 	
@@ -39,9 +44,17 @@ public class MainOverlay extends ItemizedOverlay {
 	private AuRal owner;
 	private int overlayIndex;
 	
+	/**
+	 * Constructor
+	 * 
+	 * @param defaultMarker default icon to place on overlays
+	 * @param owner AuRal main activity
+	 */
 	public MainOverlay(Drawable defaultMarker, AuRal owner) {
 		super(boundCenter(defaultMarker));
 		this.owner = owner;
+		
+		//The index 0 is reserved for the user.
 		OverlayItem me = new OverlayItem(new GeoPoint(0, 0), "", "");
 		IndexedOverlayItem user = new IndexedOverlayItem(me, 0);
 		overlayIndex = 0;
@@ -50,53 +63,57 @@ public class MainOverlay extends ItemizedOverlay {
 		populate();
 	}
 	
+	/**
+	 * Draw the overlay!
+	 * 
+	 * @param canvas the map's canvas to draw to
+	 * @param mapView the map
+	 * @param shadow
+	 */
 	@Override
 	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
 		Projection projection = mapView.getProjection();
 		for (IndexedOverlayItem indexedOverlayItem : overlays.values()) {
 			Paint mPaint = new Paint();
 		    mPaint.setStyle(Style.STROKE);
-		    //mPaint.setStyle(Style.FILL);
-		    mPaint.setColor(0xFFFF0000);
+		    mPaint.setColor(0xFFFF0000); //red.
 		    mPaint.setAntiAlias(true);
 		    
-		    //this is an area overlay item
-			if (indexedOverlayItem.item instanceof AreaOverlayItem) {
+		    //This is an area overlay item. Draw the red bounding polygon around it.
+			if (indexedOverlayItem.getItem() instanceof PolygonOverlayItem) {
 				//we can set a marker here for areas
 				//overlay.setMarker(Drawable marker); //keep in mind this will just give the center an image
-				AreaOverlayItem areaOverlayItem = (AreaOverlayItem)indexedOverlayItem.item;
+				PolygonOverlayItem areaOverlayItem = (PolygonOverlayItem)indexedOverlayItem.getItem();
 				//draw the area now
-				int numberToDraw = areaOverlayItem.points.size() - 1;
+				int numberToDraw = areaOverlayItem.getPoints().size() - 1;
 				
 				Path p = new Path();
 			    for (int i = 0; i < numberToDraw; i++) {
 				    Point from = new Point();
 				    Point to = new Point();
-				    projection.toPixels(areaOverlayItem.points.get(i), from);
-				    projection.toPixels(areaOverlayItem.points.get(i + 1), to);
+				    projection.toPixels(areaOverlayItem.getPoints().get(i), from);
+				    projection.toPixels(areaOverlayItem.getPoints().get(i + 1), to);
 				    p.moveTo(from.x, from.y);
 				    p.lineTo(to.x, to.y);
 			    }
 			    Point from = new Point();
 			    Point to = new Point();
-			    projection.toPixels(areaOverlayItem.points.get(0), from);
-			    projection.toPixels(areaOverlayItem.points.get(numberToDraw), to);
+			    projection.toPixels(areaOverlayItem.getPoints().get(0), from);
+			    projection.toPixels(areaOverlayItem.getPoints().get(numberToDraw), to);
 			    p.moveTo(from.x, from.y);
 			    p.lineTo(to.x, to.y);
 			    canvas.drawPath(p, mPaint);
 				
 			}
-			//this is the user.
+			//This is the user.
 			else if (indexedOverlayItem.index == 0) {
-				//we can set a marker here for the user
+				//TODO: we can set a marker here for the user
 				//overlay.setMarker(Drawable marker);
 			}
-			//this is a point location
-			else { //it's a normal point overlay
-				//we can set a marker here for pointplaces
-				//overlay.setMarker(Drawable marker);
-				OverlayItem item = (OverlayItem)indexedOverlayItem.item;
-				PointPlace place = (PointPlace)owner.auraManager.destinations.get(indexedOverlayItem.index);
+			//This is a point location. Draw its red bounding circle around it.
+			else {
+				OverlayItem item = (OverlayItem)indexedOverlayItem.getItem();
+				PointGeoSynth place = (PointGeoSynth)owner.getAuraManager().getDestinations().get(indexedOverlayItem.index);
 				int radius = metersToRadius((float)60.0, mapView, place.getLat());
 				GeoPoint gP = item.getPoint();
 				Point p = new Point();
@@ -104,23 +121,37 @@ public class MainOverlay extends ItemizedOverlay {
 				canvas.drawCircle(p.x, p.y, radius, mPaint);
 			}
 		}
-		
 		super.draw(canvas, mapView, shadow);
 	}
 	
-	//for determining the radius of a point location's circle on the mapView
+	/**
+	 * Converts the radius of a location to the map view system based on latitude
+	 * 
+	 * @param meters radius in meters
+	 * @param map
+	 * @param latitude of the point
+	 * @return radius converted to the map's system from meters
+	 */
 	public static int metersToRadius(float meters, MapView map, double latitude) {
 	    return (int) (map.getProjection().metersToEquatorPixels(meters) * (1/ Math.cos(Math.toRadians(latitude))));         
 	}
 	
-	public void moveMe(OverlayItem overlay) {
-		//mOverlays.set(0, overlay);
+	/**
+	 * Move the user's marker to the new position.
+	 * 
+	 * @param overlay
+	 */
+	public void moveMe(OverlayItem overlay) {		
 		overlays.put(0, new IndexedOverlayItem(overlay, 0));
 		setLastFocusedIndex(-1);
 		populate();
 	}
 	
-	//public void setOverlays(List<OverlayItem> overlays) {
+	/**
+	 * Setter for the map
+	 * 
+	 * @param o new map to be set
+	 */
 	public void setOverlays(Map<Object, IndexedOverlayItem> o) {
 		this.overlays = o;
 	    setLastFocusedIndex(-1);
@@ -128,6 +159,11 @@ public class MainOverlay extends ItemizedOverlay {
 		overlayIndex = o.size();
 	}
 	
+	/**
+	 * Increment the index and add an overlay to the map
+	 * 
+	 * @param overlay to be added
+	 */
 	public void addOverlay(IndexedOverlayItem overlay) {
 		overlayIndex++;
 		overlays.put(overlayIndex, overlay);
@@ -135,21 +171,38 @@ public class MainOverlay extends ItemizedOverlay {
 	    populate();
 	}
 
+	/**
+	 * For drawing the overlays. Called on each one by map view
+	 * 
+	 * @param i index
+	 * @return the overlay item at index i
+	 */
 	@Override
 	protected OverlayItem createItem(int i) {
-		return overlays.get(i).item;
+		return overlays.get(i).getItem();
 	}
 
+	/**
+	 * The size of the map
+	 * 
+	 * @return size of the map
+	 */
 	@Override
 	public int size() {
 		return overlays.size();
 	}
 	
+	/**
+	 * The user has tapped on an overlay icon. If it's 0, animate to center the user. Otherwise, we want to edit the overlay
+	 * 
+	 * @param index of the tapped overlay icon
+	 * @return true - we handle all possibilities here, so the event is finished
+	 */
 	@Override
 	protected boolean onTap(int index) {
 		if (index == 0) {
-			Location currentLocation = owner.locationeer.getCurrentLocation();
-			owner.cartographer.mapController.animateTo(new GeoPoint((int)(currentLocation.getLatitude()*1E6), (int)(currentLocation.getLongitude()*1E6)));
+			Location currentLocation = owner.getLocationeer().getCurrentLocation();
+			owner.getCartographer().getMapController().animateTo(new GeoPoint((int)(currentLocation.getLatitude()*1E6), (int)(currentLocation.getLongitude()*1E6)));
 			return true;
 		}
 		else {
@@ -158,12 +211,18 @@ public class MainOverlay extends ItemizedOverlay {
 		}
 	}
 	
+	/**
+	 * The user has tapped on an overlay that isn't his/her own. We want to edit the location associated with it.
+	 * This is much like creation of a synth/geo location mapping.
+	 * 
+	 * @param index of the tapped overlay
+	 */
 	private void editDialog(final int index) {
 		new Thread() {
 			@SuppressWarnings("static-access")
 			LayoutInflater inflater = (LayoutInflater) owner.getSystemService(owner.LAYOUT_INFLATER_SERVICE);
 			final View layout = inflater.inflate(R.layout.dialog, (ViewGroup) owner.findViewById(R.id.dialogroot));
-			Place place = (Place) owner.auraManager.destinations.get(overlays.get(index).index);
+			GeoSynth place = (GeoSynth) owner.getAuraManager().getDestinations().get(overlays.get(index).index);
 			
 			//PointPlace place = (PointPlace) owner.destinations.get(index); //TODO: convert this to a Place first, then we can filter into subclasses
 			EditText et = (EditText) layout.findViewById(R.id.dialogEditName);
@@ -206,15 +265,15 @@ public class MainOverlay extends ItemizedOverlay {
                 		CheckBox remove = (CheckBox) layout.findViewById(R.id.dialogRemove);
                     	if (remove.isChecked()) {
                     		
-                    		Toast.makeText(owner, "Removing Location: " + owner.auraManager.destinations.get(overlays.get(index).index).name , 3000).show();
+                    		Toast.makeText(owner, "Removing Location: " + owner.getAuraManager().getDestinations().get(overlays.get(index).index).getName() , 3000).show();
                     		if (place.fromServer == true && place.play == true)
-                    			owner.serverHook.notifyServerLocationExit(place);
+                    			owner.getServerHook().notifyServerLocationExit(place);
                     		if (place.play == true)
-                    			owner.scManager.stopAudio(place.index);
-                    		owner.auraManager.destinations.remove(overlays.get(index).index);
+                    			owner.getScManager().stopAudio(place.index);
+                    		owner.getAuraManager().getDestinations().remove(overlays.get(index).index);
                     		overlays.remove(index);
                     		setLastFocusedIndex(-1);
-                    		owner.cartographer.mapView.invalidate();
+                    		owner.getCartographer().getMapView().invalidate();
                     		
                     		Object[] keys = overlays.keySet().toArray();
                     		Collection<IndexedOverlayItem> itemSet = (Collection<IndexedOverlayItem>) overlays.values();
@@ -229,21 +288,21 @@ public class MainOverlay extends ItemizedOverlay {
                     		overlays = newOverlays;
                     		setLastFocusedIndex(-1);
                     		populate();
-                    		owner.cartographer.mapView.invalidate();
+                    		owner.getCartographer().getMapView().invalidate();
                     		
-                    		owner.auraManager.testLocation(owner.locationeer.getCurrentLocation());
+                    		owner.getAuraManager().testLocation(owner.getLocationeer().getCurrentLocation());
                     	}
                     	else {
                     		CheckBox submit = (CheckBox) layout.findViewById(R.id.dialogSubmit);
                     		if (submit.isChecked()) {
-                    			if (place instanceof PointPlace)
-                    				owner.serverHook.submitArea((PointPlace)place);
+                    			if (place instanceof PointGeoSynth)
+                    				owner.getServerHook().submitPoint((PointGeoSynth)place);
                     		}
 	                    	place.setName(et.getText().toString());
 	                    	place.setSynthDef(syn);
 	                    	place.play = false;
-	                    	owner.scManager.updateAudio(place.getIndex(), synOld.replace(".scsyndef", ""), place.getSynthDef().replace(".scsyndef", ""));
-	                    	owner.auraManager.testLocation(owner.locationeer.getCurrentLocation());
+	                    	owner.getScManager().updateAudio(place.getIndex(), synOld.replace(".scsyndef", ""), place.getSynthDef().replace(".scsyndef", ""));
+	                    	owner.getAuraManager().testLocation(owner.getLocationeer().getCurrentLocation());
 	                    }
                     	
                 	}

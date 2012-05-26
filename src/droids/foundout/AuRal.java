@@ -20,108 +20,132 @@ import com.google.android.maps.MapActivity;
 public class AuRal extends MapActivity {
 	
 	//generally useful stuff across the board
-	SharedPreferences preferences;
-	static final String TAG = "AuRal"; //for logs
-	TextView tv1;
-	TextView tv2;
+	private SharedPreferences preferences;
+	private static final String TAG = "AuRal"; //for logs
+	private TextView tv1, tv2;
 	
-	Locationeer locationeer;
-	AuraManager auraManager;
-	SCManager scManager;
-	ServerHook serverHook;
-	Cartographer cartographer;
+	private Locationeer locationeer;
+	private AuraManager auraManager;
+	private SCManager scManager;
+	private ServerHook serverHook;
+	private Cartographer cartographer;
 	
 	//states
 	boolean createAreaMode = false;
 	boolean areaCreated = true;
     
-	//TODO: PERFORMANCE! multithreading. - started on this, add priority
+	/**
+	 * Set up the main view, initialize all the moving parts.
+	 * 
+	 * @param savedInstanceState
+	 */
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
     	
-    	preferences = PreferenceManager.getDefaultSharedPreferences(this);
+    	setPreferences(PreferenceManager.getDefaultSharedPreferences(this));
     	setContentView(R.layout.main);
-    	tv1 = (TextView) findViewById(R.id.latView);
-    	tv2 = (TextView) findViewById(R.id.longView);
+    	setTv1((TextView) findViewById(R.id.latView));
+    	setTv2((TextView) findViewById(R.id.longView));
         
-    	locationeer = new Locationeer(this);
-    	auraManager = new AuraManager(this);
-    	scManager = SCManager.getInstance();
-    	scManager.setOwner(this);
+    	setLocationeer(new Locationeer(this));
+    	setAuraManager(new AuraManager(this));
+    	setScManager(SCManager.getInstance());
+    	getScManager().setOwner(this);
     	//scManager = new SCManager(this);
-    	serverHook = ServerHook.getInstance();
-    	serverHook.setOwner(this);
+    	setServerHook(ServerHook.getInstance());
+    	getServerHook().setOwner(this);
     	//serverHook = new ServerHook(this);
-    	cartographer = new Cartographer(this);
+    	setCartographer(new Cartographer(this));
     }
     
-    //makes things work again. used when changing preferences as well as coming back to the app
+    /**
+     * Update preferences and server connection in serverHook. Start listening for location updates. Play appropriate audio.
+     */
     public void onResume() {
     	super.onResume();
-    	serverHook.updateIP(preferences.getString("ip_number", "aural.allisonic.com"));
-		serverHook.updateUser(preferences.getString("username", ""), preferences.getString("password", ""));
-		locationeer.startLocationUpdates(); //get the locationListener up and running again
-		String s = preferences.getString("listPref", "Micromoog");
-		s = s.replace(".scsyndef", "");
-		if (!scManager.selectedSynth.replace(".scsyndef", "").equals(s)) {
-			scManager.selectedSynth = s;
-			scManager.stopPersonal();
-			scManager.sc.sendMessage(new OscMessage( new Object[] {"s_new", scManager.selectedSynth.replace(".scsyndef", ""), 100, 0, 0}));
-		}
-		scManager.startPersonal(preferences.getBoolean("play_personal_audio", false)); //play or pause personal audio based on preferences
+    	
+    	getServerHook().updateIP(getPreferences().getString("ip_number", "aural.allisonic.com"));
+		getServerHook().updateUser(getPreferences().getString("username", ""), getPreferences().getString("password", ""));
+		getLocationeer().startLocationUpdates(); //get the locationListener up and running again
 		
-		if (preferences.getBoolean("play_personal_audio", false) == true) {
-			scManager.sc.sendMessage(new OscMessage(new Object[] { "n_set", 100, "r", (float)(preferences.getInt("Pslider1", 0)/1000.0) }));
+		String s = getPreferences().getString("listPref", "Micromoog");
+		s = s.replace(".scsyndef", "");
+		if (!getScManager().getSelectedSynth().replace(".scsyndef", "").equals(s)) {
+			getScManager().setSelectedSynth(s);
+			getScManager().stopPersonal();
+			getScManager().getSc().sendMessage(new OscMessage( new Object[] {"s_new", getScManager().getSelectedSynth().replace(".scsyndef", ""), 100, 0, 0}));
+		}
+		getScManager().playPersonal(getPreferences().getBoolean("play_personal_audio", false)); //play or pause personal audio based on preferences
+		
+		if (getPreferences().getBoolean("play_personal_audio", false) == true) {
+			getScManager().getSc().sendMessage(new OscMessage(new Object[] { "n_set", 100, "r", (float)(getPreferences().getInt("Pslider1", 0)/1000.0) }));
 		}
 		/**if (preferences.getBoolean("play_other_audio", false) == true) {
 			serverHook.changeServerParams();
 		}*/
-		auraManager.testLocation(locationeer.getCurrentLocation()); //determine which tracks (if any) to play and start them
+		getAuraManager().testLocation(getLocationeer().getCurrentLocation()); //determine which tracks (if any) to play and start them
     }
     
-    //TODO: Android Life Cycle!
+    /**
+     * Stop location updates, call super.onPause
+     */
     @Override
 	public void onPause() {
+    	getLocationeer().stopLocationUpdates();
 		super.onPause();
-		locationeer.stopLocationUpdates();
 	}
 	
+    /**
+     * Stop SC server, close off the ServerHook, stop location updates, call super.destroy
+     */
 	@Override
 	public void onDestroy() {
 		//if (scManager.sc!=null) scManager.sc.stop();
-		scManager.stopPersonal();
-		scManager.sc.sendQuit();
-		scManager.sc.closeUDP();
-		serverHook.oscReceiver.close();
-		locationeer.stopLocationUpdates();
-		serverHook.logOut();
+		getScManager().stopPersonal();
+		getScManager().getSc().sendQuit();
+		getScManager().getSc().closeUDP();
+		getServerHook().closeOSC();
+		getLocationeer().stopLocationUpdates();
+		getServerHook().logOut();
 		super.onDestroy();
 	}
 	
+	/**
+	 * Stop SC server, close off the ServerHook, stop location updates, call super.finish
+	 */
 	@Override
 	public void finish() {
 		//if (scManager.sc!=null) scManager.sc.stop();
-		scManager.stopPersonal();
-		scManager.sc.sendQuit();
-		scManager.sc.closeUDP();
-		serverHook.oscReceiver.close();
+		getScManager().stopPersonal();
+		getScManager().getSc().sendQuit();
+		getScManager().getSc().closeUDP();
+		getServerHook().closeOSC();
 		//serverHook.oscReceiver.stopListening();
-		locationeer.stopLocationUpdates();
-		serverHook.logOut();
+		getLocationeer().stopLocationUpdates();
+		getServerHook().logOut();
 		super.finish();
 	}
     
-    //sets up our menu for first use
+    /**
+     * Inflates the menu from xml
+     * 
+     * @param menu
+     */
     public boolean onCreateOptionsMenu(Menu menu) {
     	MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.menu, menu);
 		return true;
 	}
 
-    //called every time the hardware menu button is pressed
+    /**
+     * Called when the menu button is pressed. Populate the menu with the appropriate options.
+     * 
+     * @param menu
+     */
     public boolean onPrepareOptionsMenu(Menu menu) {
-		if (serverHook.getID() == 0) {
+    	//ID 0 means that the user is not logged into the server.
+		if (getServerHook().getID() == 0) {
 			menu.setGroupVisible(R.id.offlineGroup, true);
 			menu.setGroupVisible(R.id.onlineGroup, false);
 		}
@@ -146,50 +170,50 @@ public class AuRal extends MapActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		
 		switch (item.getItemId()) {
-		case R.id.preferences:
+		case R.id.preferences: //launch the preferences Activity
 			Intent i = new Intent(AuRal.this, Preferences.class);
 			startActivity(i);
 			break;
-		case R.id.connect:
+		case R.id.connect: //download all locations form server
 			new Thread() {
 	        	public void run() {
-	        		serverHook.getLocationsFromServer();
+	        		getServerHook().getLocationsFromServer();
 	        	}
 			}.run();
-    		cartographer.mapView.invalidate();
-    		auraManager.testLocation(locationeer.getCurrentLocation());
+    		getCartographer().getMapView().invalidate();
+    		getAuraManager().testLocation(getLocationeer().getCurrentLocation());
 			break;
-		case R.id.createArea:
-			cartographer.areaPoints = new ArrayList<GeoPoint>();
+		case R.id.createArea: //start create area mode. 
+			getCartographer().setAreaPoints(new ArrayList<GeoPoint>());
 			Drawable drawable = this.getResources().getDrawable(R.drawable.circlered);
-			cartographer.areaCreationOverlay = new AreaOverlay(drawable/**, this*/);
+			getCartographer().setAreaCreationOverlay(new PolygonOverlay(drawable/**, this*/));
 			createAreaMode = true;
 			break;
-		case R.id.finalizeCreate:
-			areaCreated = auraManager.createAreaLocation();
-			auraManager.testLocation(locationeer.getCurrentLocation());
+		case R.id.finalizeCreate: //create the area and drop back into normal mode
+			areaCreated = getAuraManager().createAreaLocation();
+			getAuraManager().testLocation(getLocationeer().getCurrentLocation());
 			createAreaMode = !areaCreated;
-			cartographer.mapView.invalidate();
+			getCartographer().getMapView().invalidate();
 			break;
-		case R.id.cancelCreate:
-			cartographer.mapOverlays = cartographer.mapView.getOverlays();
-			cartographer.mapOverlays.remove(cartographer.areaCreationOverlay);
+		case R.id.cancelCreate: //drop the area data and go back to normal mode
+			getCartographer().setMapOverlays(getCartographer().getMapView().getOverlays());
+			getCartographer().getMapOverlays().remove(getCartographer().getAreaCreationOverlay());
 			createAreaMode = false;
-			cartographer.mapView.invalidate();
+			getCartographer().getMapView().invalidate();
 			break;
-		case R.id.login:
-			serverHook.logIn();
+		case R.id.login: //log into the server
+			getServerHook().logIn();
 			break;
-		case R.id.logout:
-			serverHook.logOut();
+		case R.id.logout: //log out of the server
+			getServerHook().logOut();
 			break;
-		case R.id.newUser:
-			serverHook.createUser();
+		case R.id.newUser: //create a new user on the server
+			getServerHook().createUser();
 			break;
-		case R.id.editUser:
-			serverHook.modifyUser();
+		case R.id.editUser: //modify existing user on the server
+			getServerHook().modifyUser();
 			break;
-		case R.id.instrument:
+		case R.id.instrument: //launch the instrument control Activity
 			Intent instrumentIntent = new Intent(AuRal.this, DirectInput.class);
 			startActivity(instrumentIntent);
 			break;
@@ -197,8 +221,70 @@ public class AuRal extends MapActivity {
 		return true;
 	}
 
-	//needed for extending MapActivity to not complain. not sure what it does.
-	protected boolean isRouteDisplayed() {
-		return false;
+	//needed for extending MapActivity to not complain.
+	protected boolean isRouteDisplayed() { return false; }
+
+	public Cartographer getCartographer() {
+		return cartographer;
+	}
+
+	public void setCartographer(Cartographer cartographer) {
+		this.cartographer = cartographer;
+	}
+
+	public ServerHook getServerHook() {
+		return serverHook;
+	}
+
+	public void setServerHook(ServerHook serverHook) {
+		this.serverHook = serverHook;
+	}
+
+	public Locationeer getLocationeer() {
+		return locationeer;
+	}
+
+	public void setLocationeer(Locationeer locationeer) {
+		this.locationeer = locationeer;
+	}
+
+	public SharedPreferences getPreferences() {
+		return preferences;
+	}
+
+	public void setPreferences(SharedPreferences preferences) {
+		this.preferences = preferences;
+	}
+
+	public SCManager getScManager() {
+		return scManager;
+	}
+
+	public void setScManager(SCManager scManager) {
+		this.scManager = scManager;
+	}
+
+	public AuraManager getAuraManager() {
+		return auraManager;
+	}
+
+	public void setAuraManager(AuraManager auraManager) {
+		this.auraManager = auraManager;
+	}
+
+	public TextView getTv1() {
+		return tv1;
+	}
+
+	public void setTv1(TextView tv1) {
+		this.tv1 = tv1;
+	}
+
+	public TextView getTv2() {
+		return tv2;
+	}
+
+	public void setTv2(TextView tv2) {
+		this.tv2 = tv2;
 	}
 }

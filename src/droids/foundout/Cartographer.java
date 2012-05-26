@@ -9,50 +9,111 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 
+/**
+ * This class manages the Google Maps map view and its overlays.
+ * @author UnderGear
+ *
+ */
 public class Cartographer {
 
-	AuRal owner;
+	private AuRal owner;
 
 	//for the Google Maps view
-	MyMapView mapView;
-	List<Overlay> mapOverlays;
-	MainOverlay itemizedOverlay; //standard overlay to use
-	AreaOverlay areaCreationOverlay;
-	MapController mapController;
-	List<GeoPoint> areaPoints; //used when constructing
+	private MyMapView mapView;
+	private List<Overlay> mapOverlays;
+	private MainOverlay itemizedOverlay; //standard overlay to use
+	private PolygonOverlay areaCreationOverlay;
+	private MapController mapController;
+	private List<GeoPoint> areaPoints; //used when constructing
 	
-	public Cartographer(AuRal g) {
-		owner = g;
+	/**
+	 * Constructor
+	 * 
+	 * @param owner AuRal main activity
+	 */
+	public Cartographer(AuRal owner) {
+		this.owner = owner;
 		setUpMap();
 	}
-	//setting up the map
+	
+	/**
+	 * Sets the map controller, a longpress listener, and the overlays.
+	 */
     public void setUpMap() {
-    	mapView = (MyMapView) owner.findViewById(R.id.mapview);
-    	mapController = mapView.getController();
-    	mapView.setOnLongpressListener(new MyMapView.OnLongpressListener() {
+    	setMapView((MyMapView) owner.findViewById(R.id.mapview));
+    	setMapController(getMapView().getController());
+    	getMapView().setOnLongpressListener(new MyMapView.OnLongpressListener() {
     		//Longpress pulls up dialog for adding destinations
             public void onLongpress(final MapView view, final GeoPoint longpressLocation) {
             	owner.runOnUiThread(new Runnable() {
             		public void run() {
                     	if (owner.createAreaMode) {
-                    		owner.auraManager.createAreaLocationPoint(longpressLocation);
-                    		owner.auraManager.testLocation(owner.locationeer.getCurrentLocation());
-                    		mapOverlays = mapView.getOverlays();
-                    		if (!mapOverlays.contains(areaCreationOverlay)) {
-                    			mapOverlays.add(areaCreationOverlay);
+                    		owner.getAuraManager().createAreaLocationPoint(longpressLocation);
+                    		owner.getAuraManager().testLocation(owner.getLocationeer().getCurrentLocation());
+                    		setMapOverlays(getMapView().getOverlays());
+                    		if (!getMapOverlays().contains(getAreaCreationOverlay())) {
+                    			getMapOverlays().add(getAreaCreationOverlay());
                     		}
                     	}
-                    	else owner.auraManager.createPointLocation(longpressLocation);
+                    	else owner.getAuraManager().createPointLocation(longpressLocation);
             		}
             	});
             }
     	});
 
-    	mapOverlays = mapView.getOverlays();
-    	mapOverlays.clear();
+    	setMapOverlays(getMapView().getOverlays());
+    	getMapOverlays().clear();
     	Drawable drawable = owner.getResources().getDrawable(R.drawable.circle);
-    	itemizedOverlay = new MainOverlay(drawable, owner);
-    	mapOverlays.add(itemizedOverlay);
-    	mapView.invalidate();
+    	setItemizedOverlay(new MainOverlay(drawable, owner));
+    	getMapOverlays().add(getItemizedOverlay());
+    	getMapView().invalidate();
     }
+
+	public MyMapView getMapView() {
+		return mapView;
+	}
+
+	public void setMapView(MyMapView mapView) {
+		this.mapView = mapView;
+	}
+
+	public List<Overlay> getMapOverlays() {
+		return mapOverlays;
+	}
+
+	public void setMapOverlays(List<Overlay> mapOverlays) {
+		this.mapOverlays = mapOverlays;
+	}
+
+	public MapController getMapController() {
+		return mapController;
+	}
+
+	public void setMapController(MapController mapController) {
+		this.mapController = mapController;
+	}
+
+	public List<GeoPoint> getAreaPoints() {
+		return areaPoints;
+	}
+
+	public void setAreaPoints(List<GeoPoint> areaPoints) {
+		this.areaPoints = areaPoints;
+	}
+
+	public PolygonOverlay getAreaCreationOverlay() {
+		return areaCreationOverlay;
+	}
+
+	public void setAreaCreationOverlay(PolygonOverlay areaCreationOverlay) {
+		this.areaCreationOverlay = areaCreationOverlay;
+	}
+
+	public MainOverlay getItemizedOverlay() {
+		return itemizedOverlay;
+	}
+
+	public void setItemizedOverlay(MainOverlay itemizedOverlay) {
+		this.itemizedOverlay = itemizedOverlay;
+	}
 }

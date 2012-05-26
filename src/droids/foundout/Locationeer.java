@@ -11,68 +11,89 @@ import android.widget.Toast;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.OverlayItem;
 
+/**
+ * The Locationeer class handles the user's current location, listens for updates, and determines if they are more or less trustworthy than the current one
+ * @author UnderGear
+ *
+ */
 public class Locationeer {
 
 	private AuRal owner;
 	private LocationManager locationManager;
 	private LocationListener locationListener;
-	private Location mostReliable;
+	private Location currentLocation;
 	
-	public Location getCurrentLocation() { return mostReliable; }
+	private String TAG = "Locationeer";
 	
-	public Locationeer(AuRal g) {
-		owner = g;
+	public Location getCurrentLocation() { return currentLocation; }
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param owner AuRal main activity
+	 */
+	public Locationeer(final AuRal owner) {
+		this.owner = owner;
+		
 		//for getting location fixes
+		//TODO: maybe this should be an asynctask.
         new Thread() {
         	public void run() {
         		locationManager = (LocationManager) owner.getSystemService(Context.LOCATION_SERVICE);
         		locationListener = new myLocationListener();
         	}
         }.run();
-        mostReliable = new Location("Server"); //IMPORTANT! to be used as current location from now on: IMPORTANT!
+        currentLocation = new Location("Server"); //IMPORTANT! to be used as current location from now on: IMPORTANT!
 	}
 	
-	//listens for location fixes
+	/**
+	 * The myLocationListener class is used to determine if new locations fixes are good. It then moves the marker on the map and sends locations to the server via ServerHook
+	 * @author UnderGear
+	 *
+	 */
     //TODO: refine the provider lose/find cases
     public class myLocationListener implements LocationListener {
-    	//TODO: make location fixes eat less battery
+    	
+    	/**
+    	 * Check if the new location is more trustworthy than the old. Update our location and tell the server if so.
+    	 * 
+    	 * @param location to be tested.
+    	 */
 		public void onLocationChanged(final Location location) {
+			//TODO: again, maybe an asynctask.
 			new Thread() {
 				public void run() {
-		    		if (isBetterLocation(location, mostReliable)) {
-		    			if (location.distanceTo(mostReliable) >= 5) {
-			    			mostReliable = location;
+					// determine if the new location fix is better than the current one.
+		    		if (isBetterLocation(location, currentLocation)) {
+		    			if (location.distanceTo(currentLocation) >= 5) {
+			    			currentLocation = location;
 			    			//mapController.animateTo(new GeoPoint((int)(mostReliable.getLongitude()*1E6), (int)(mostReliable.getLatitude()*1E6)));
-			    			GeoPoint p = new GeoPoint((int)(mostReliable.getLatitude()*1E6), (int)(mostReliable.getLongitude()*1E6));
+			    			GeoPoint p = new GeoPoint((int)(currentLocation.getLatitude()*1E6), (int)(currentLocation.getLongitude()*1E6));
 			    	    	OverlayItem overlayitem = new OverlayItem(p, "", "");
-			    			owner.cartographer.itemizedOverlay.moveMe(overlayitem);
-			    	        Log.d(AuRal.TAG, mostReliable.getLatitude() + "");
-			    	        Log.d(AuRal.TAG, mostReliable.getLongitude() + "");
-			    	        owner.tv1.setText("Current Latitude: " + mostReliable.getLatitude());
-			    	        owner.tv2.setText("Current Longitude: " + mostReliable.getLongitude());
-			    	        owner.auraManager.testLocation(mostReliable);
-			    	        owner.cartographer.mapView.invalidate();
-			    	        owner.serverHook.sendMyLocation();
+			    			owner.getCartographer().getItemizedOverlay().moveMe(overlayitem);
+			    	        Log.d(TAG, currentLocation.getLatitude() + "");
+			    	        Log.d(TAG, currentLocation.getLongitude() + "");
+			    	        owner.getTv1().setText("Current Latitude: " + currentLocation.getLatitude());
+			    	        owner.getTv2().setText("Current Longitude: " + currentLocation.getLongitude());
+			    	        owner.getAuraManager().testLocation(currentLocation);
+			    	        owner.getCartographer().getMapView().invalidate();
+			    	        owner.getServerHook().sendMyLocation();
 		    			}
 		    		}
 				}
 			}.run();
     	}
 
-		public void onProviderDisabled(String provider) {
-			// TODO Auto-generated method stub
-		}
+		public void onProviderDisabled(String provider) { }
 
-		public void onProviderEnabled(String provider) {
-			// TODO Auto-generated method stub
-		}
+		public void onProviderEnabled(String provider) { }
 
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-			// TODO Auto-generated method stub
-		}
+		public void onStatusChanged(String provider, int status, Bundle extras) { }
     };
     
-  //set up the locationManager
+    /**
+     * Start checking for location updates from Network and GPS if available
+     */
 	public void startLocationUpdates() {
     	if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
         	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
@@ -86,13 +107,17 @@ public class Locationeer {
         else {
         	Toast.makeText(owner, "GPS provider is disabled", 3000).show();
         }
-        if (mostReliable.getLatitude() == 0) owner.tv1.setText("Current Latitude: ?");
-        else owner.tv1.setText("Current Latitude: " + mostReliable.getLatitude());
-        if (mostReliable.getLongitude() == 0) owner.tv2.setText("Current Longitude: ?");
-        else owner.tv2.setText("Current Longitude: " + mostReliable.getLongitude());
+        //Update the location textviews to show the current location.
+        //0, 0 means we have yet to get a read. show ? instead of 0.
+        if (currentLocation.getLatitude() == 0) owner.getTv1().setText("Current Latitude: ?");
+        else owner.getTv1().setText("Current Latitude: " + currentLocation.getLatitude());
+        if (currentLocation.getLongitude() == 0) owner.getTv2().setText("Current Longitude: ?");
+        else owner.getTv2().setText("Current Longitude: " + currentLocation.getLongitude());
     }
 
-	//stop the locationManager
+	/**
+	 * Stop listening for updates.
+	 */
     public void stopLocationUpdates() {
     	locationManager.removeUpdates(locationListener);
     }
@@ -146,7 +171,7 @@ public class Locationeer {
         return false;
     }
     
-    /** Checks whether two providers are the same */
+    // Checks whether two providers are the same
     private boolean isSameProvider(String provider1, String provider2) {
         if (provider1 == null) {
           return provider2 == null;

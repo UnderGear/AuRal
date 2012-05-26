@@ -8,21 +8,26 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+/**
+ * This Activity is used to control the synths at your current locations.
+ * It pulls a page down from the server which updates your params there.
+ */
 public class DirectInput extends Activity {
 
-	SCManager scManager;
-	ServerHook serverHook;
-	
+	private ServerHook serverHook;
 	private String TAG = "AuRal Direct Input";
-	
 	private WebView webView;
 	
+	/**
+	 * Set up the Web View and its JS interface.
+	 * 
+	 * @param savedInstanceState
+	 */
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        scManager = SCManager.getInstance();
-        serverHook = ServerHook.getInstance();
+        serverHook = ServerHook.getInstance(); //we need to communicate with the server.
         
         setContentView(R.layout.web_input);
         webView = (WebView) findViewById(R.id.webview);
@@ -38,7 +43,6 @@ public class DirectInput extends Activity {
 
         webView.addJavascriptInterface(new AuRalJavaScriptInterface(), "aural_send");
         
-        
         try {
         	webView.loadUrl("http://" + serverHook.getURL() + "/ui/AuRal_default_ui.html");
         }
@@ -47,29 +51,35 @@ public class DirectInput extends Activity {
         }
     }
     
+	/**
+	 * Hooks for the server to use on your device. This is safer than passing it the entire Context. The JS side has less access to your code.
+	 */
     final class AuRalJavaScriptInterface {
 
-        AuRalJavaScriptInterface() {
-        }
+    	/**
+    	 * Constructor
+    	 */
+        AuRalJavaScriptInterface() { }
 
         /**
-         * This is not called on the UI thread. Post a runnable to invoke
-         * loadUrl on the UI thread.
+         * This allows the server to find out your account ID.
          */
         public int get_id() {
         	return serverHook.getID();
         }
         
+        /** Deprecated. The server side is now handling this for us instead.
         public void slider_value(int id, String value) {
-            //Log.e(TAG, "id: " + id + ", value: " + value);
-            //serverHook.changeServerParams(id, value);
-        }
+            Log.d(TAG, "id: " + id + ", value: " + value);
+            serverHook.changeServerParams(id, value);
+        }*/
         
     }
 
     /**
-     * Provides a hook for calling "alert" from javascript. Useful for
-     * debugging your javascript.
+     * Provides a hook for calling "alert" from javascript. Useful for debugging your javascript.
+     * 
+     * This code came from Jesse Allison, I think from an example he found somewhere. I know nothing about it.
      */
     final class MyWebChromeClient extends WebChromeClient {
         @Override
@@ -80,7 +90,6 @@ public class DirectInput extends Activity {
         }
         
         public boolean setUserID(WebView view, String url, String message, JsResult result) {
-        	
         	return true;
         }
     }

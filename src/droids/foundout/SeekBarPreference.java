@@ -8,16 +8,32 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
+/**
+ * Seek bar in the preference menu.
+ * @author UnderGear
+ *
+ */
 public class SeekBarPreference extends DialogPreference {
 	
      private Context context;
      private SeekBar seek;
 
+     /**
+      * Constructor
+      * 
+      * @param context
+      * @param attrs
+      */
      public SeekBarPreference(Context context, AttributeSet attrs) {
          super(context, attrs);
          this.context = context;
      }
 
+     /**
+      * Set up the seek bar for use
+      * 
+      * @param builder
+      */
      protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
 
          LinearLayout layout = new LinearLayout(context);
@@ -37,6 +53,11 @@ public class SeekBarPreference extends DialogPreference {
          super.onPrepareDialogBuilder(builder);
      }
 
+     /**
+      * put the value into the preferences.
+      * 
+      * @param isPositive
+      */
      protected void onDialogClosed(boolean isPositive) {
          if (isPositive) {
              persistInt(seek.getProgress());

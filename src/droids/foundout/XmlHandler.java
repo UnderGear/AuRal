@@ -6,6 +6,11 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+/**
+ * Parses XML from server HTTP replies. Much of this is from example code on the internet.
+ * @author UnderGear
+ *
+ */
 public class XmlHandler extends DefaultHandler {
 	private boolean in_location = false;
     //private boolean in_id = false;
@@ -14,8 +19,8 @@ public class XmlHandler extends DefaultHandler {
     private boolean in_name = false;
     private boolean in_synth = false;
     
-    private ArrayList<PointPlace> places = new ArrayList<PointPlace>();
-    private PointPlace currentPlace;
+    private ArrayList<PointGeoSynth> places = new ArrayList<PointGeoSynth>();
+    private PointGeoSynth currentPlace;
     private String syn = "Micromoog.scsyndef";
     private String name = "";
     private double lat, lon;
@@ -29,9 +34,9 @@ public class XmlHandler extends DefaultHandler {
     }
     
     //TODO: make this whole thing parse areas as well. DB should hold many lats and lons. we should check for 1, 2 (error) and 3+
-    public ArrayList<PointPlace> getPlaces() {
-    	ArrayList<PointPlace> ps = places;
-    	places = new ArrayList<PointPlace>();
+    public ArrayList<PointGeoSynth> getPlaces() {
+    	ArrayList<PointGeoSynth> ps = places;
+    	places = new ArrayList<PointGeoSynth>();
     	return ps;
     }
     
@@ -66,7 +71,7 @@ public class XmlHandler extends DefaultHandler {
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
         if (localName.equals("location")) {
             this.in_location = false;
-            currentPlace = new PointPlace(lat, lon, -1, syn, name, true);
+            currentPlace = new PointGeoSynth(lat, lon, -1, syn, name, true);
             places.add(currentPlace);
         }/**else if (localName.equals("id")) {
             this.in_id = false;
