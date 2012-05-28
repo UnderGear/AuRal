@@ -1,17 +1,19 @@
-This is an Android Eclipse project I did for an REU over the 2011 Summer. It was a lot of fun, and I feel like I learned a lot from it, so here it is!
+This is an Android Eclipse project I did for an REU over the 2011 Summer. It was a lot of fun, and I feel like I learned a lot from it.
 
-I would like to give credit to: 
-https://github.com/glastonbridge/SuperCollider-Android/
+I would like to give some credit, firstly.
+This material is based upon work supported by the National Science Foundation under Grant OCI-1005165.
+https://github.com/glastonbridge/SuperCollider-Android/ - This is the Open Source SuperCollider Android app that AuRal REQUIRES to run without crashing.
 http://supercollider.sourceforge.net/sc140/ - I transcribed a few of these for use in the app
-
-If you have any questions, comments, suggestions or bones to pick, feel free to contact me: christian.dell1@gmail.com
+http://www.illposed.com/software/javaosc.html - This library is used to receive OSC from the Server.
 
 It requires Android 2.2+ and SuperCollider Android which can be found here: https://github.com/glastonbridge/SuperCollider-Android/wiki/_access
 
-Contact me if you are having any problems with SC. I had a lot of them at first, but it is really nice after everything is all set up.
-It is a source link to the SuperCollider project. Copy/Paste the ISuperCollider.java file from that project into the same location (in gen folder) in this project
+Contact me if you are having any problems with SC. There are a few tricks with setting up the projects to link together in Eclipse.
+You must first put the SuperCollider app onto your device. Follow their instructions for building the NDK code, and then getting the project into Eclipse. Push it over to the device, and then go into the project's properties and set it to be a Library under the Android menu there.
+To set up this project in Eclipse, first you should import it and make sure that you are using the Google SDK for Android 2.2 in Properties->Android. While you're here, add the SuperCollider project to the Libraries references at the bottom. You'll need to download Java OSC from a link above. Follow their instructions, and add the built jar to the java build path in my project. It should be at javaosc/lib/javaosc.jar
 
-I will upload the Ruby on Rails server that accompanies this project in the near future so you can see that, too.
+
+The accompanying Ruby on Rails app is a server that mediates interaction between multiple client apps. It can be found here: https://github.com/UnderGear/AuRalSite
 
 Usage:
 Change login information in Menu -> Preferences. Port 8000 is the default.
@@ -20,4 +22,5 @@ You long press on the map to create a new location. Name it, select a synth, if 
 Create area mode allows you to long press on the map to set vertices on a polygon. Menu -> Finalize pulls up a similar dialog to the normal creation mode.
 
 NOTE: My SuperCollider skills are very lacking. If you actually know what you're doing with SC, feel free to contribute some synths!
-I have been following a pattern with parameters going into the synths: r, v, m are the names associated with the sliders in Preferences
+
+If you have any questions, comments, suggestions or bones to pick, feel free to contact me: christian.dell1@gmail.com
